@@ -14,6 +14,7 @@ import (
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
 	"github.com/google/gopacket/pcapgo"
+	"github.com/shirou/gopsutil/process"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -272,6 +273,28 @@ func (nf *Netflow) GetProcessRank(limit int, recentSeconds int) ([]*Process, err
 	nf.processHash.Sort(recentSeconds)
 	prank := nf.processHash.GetRank(limit)
 	return prank, nil
+}
+
+func (nf *Netflow) GetProcessesByName(name string) ([]*Process, error) {
+
+	var res []*Process
+
+	procs, err := process.Processes()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, proc := range procs {
+		pname, err := proc.Name()
+		if err != nil {
+			continue
+		}
+		if name == pname {
+			pidStr := fmt.Sprintf("%d", proc.Pid)
+			res = append(res, nf.processHash.Get(pidStr))
+		}
+	}
+	return res, nil
 }
 
 func (nf *Netflow) incrCounter() {
