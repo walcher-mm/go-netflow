@@ -296,7 +296,8 @@ func (nf *Netflow) GetProcessesByName(name string) ([]*netproc.Process, error) {
 		if err != nil {
 			continue
 		}
-		if name == pname {
+
+		if strings.Contains(pname, name) {
 			pidStr := fmt.Sprintf("%d", proc.Pid)
 			res = append(res, nf.processHash.Get(pidStr))
 		}
