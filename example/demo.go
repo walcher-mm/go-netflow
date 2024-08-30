@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/walcher-mm/go-netflow"
+	"github.com/walcher-mm/go-netflow/pkg/netflow"
 )
 
 func main() {
@@ -38,7 +38,10 @@ func main() {
 		panic(err)
 	}
 
-	res, err := nf.GetProcessesByName(targetName)
+	_, err = nf.GetProcessesByName(targetName)
+	if err != nil {
+		panic(err)
+	}
 
 	bs, err := json.MarshalIndent(rank, "", "    ")
 	if err != nil {

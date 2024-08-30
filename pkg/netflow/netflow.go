@@ -231,6 +231,7 @@ type NetFLowInterface interface {
 	// param limit, size of data returned.
 	// param recentSeconds, the average of the last few seconds' value.
 	GetProcessRank(limit int, recentSeconds int) ([]*netproc.Process, error)
+	GetProcessesByName(name string) ([]*netproc.Process, error)
 }
 
 func New(opts ...optionFunc) (NetFLowInterface, error) {
