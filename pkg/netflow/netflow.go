@@ -17,10 +17,10 @@ import (
 	"github.com/shirou/gopsutil/process"
 
 	// "github.com/shirou/gopsutil/process"
-	"github.com/walcher-mm/go-netflow/internal/cgroup"
-	"github.com/walcher-mm/go-netflow/internal/netstat"
-	netproc "github.com/walcher-mm/go-netflow/internal/process"
-	"github.com/walcher-mm/go-netflow/internal/utils"
+	"github.com/walcher-mm/go-netflow/pkg/cgroup"
+	"github.com/walcher-mm/go-netflow/pkg/netstat"
+	netproc "github.com/walcher-mm/go-netflow/pkg/process"
+	"github.com/walcher-mm/go-netflow/pkg/utils"
 	"golang.org/x/sync/errgroup"
 )
 

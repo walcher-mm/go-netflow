@@ -13,8 +13,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cast"
 
-	netproc "github.com/walcher-mm/go-netflow/internal/process"
 	"github.com/walcher-mm/go-netflow/pkg/netflow"
+	netproc "github.com/walcher-mm/go-netflow/pkg/process"
 )
 
 var (
