@@ -1,4 +1,4 @@
-package netflow
+package utils
 
 import (
 	"encoding/json"
@@ -22,7 +22,7 @@ const (
 	//TCP_MAX_STATES
 )
 
-var states = map[int]string{
+var TCP_STATE = map[int]string{
 	TCP_ESTABLISHED: "ESTABLISHED",
 	TCP_SYN_SENT:    "SYN_SENT",
 	TCP_SYN_RECV:    "SYN_RECV",
@@ -107,12 +107,12 @@ type LoggerInterface interface {
 
 var defaultLogger string
 
-type logger struct{}
+type Logger struct{}
 
-func (l *logger) Debug(msg ...interface{}) {
+func (l *Logger) Debug(msg ...interface{}) {
 	fmt.Println(msg...)
 }
 
-func (l *logger) Error(msg ...interface{}) {
+func (l *Logger) Error(msg ...interface{}) {
 	fmt.Println(msg...)
 }

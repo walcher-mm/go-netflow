@@ -13,11 +13,12 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cast"
 
-	"github.com/rfyiamcool/go-netflow"
+	netproc "github.com/walcher-mm/go-netflow/internal/process"
+	"github.com/walcher-mm/go-netflow/pkg/netflow"
 )
 
 var (
-	nf netflow.Interface
+	nf netflow.NetFLowInterface
 
 	yellow  = color.New(color.FgYellow).SprintFunc()
 	red     = color.New(color.FgRed).SprintFunc()
@@ -95,7 +96,7 @@ func clear() {
 	fmt.Printf("\x1b[2J")
 }
 
-func showTable(ps []*netflow.Process) {
+func showTable(ps []*netproc.Process) {
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"pid", "name", "exe", "inodes", "sum_in", "sum_out", "in_rate", "out_rate"})
 	table.SetRowLine(true)

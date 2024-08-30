@@ -1,11 +1,11 @@
-package netflow
+package utils
 
 import (
 	"encoding/json"
 	"strings"
 )
 
-func matchStringSuffix(s string, mv []string) bool {
+func MatchStringSuffix(s string, mv []string) bool {
 	for _, val := range mv {
 		if strings.HasSuffix(s, val) {
 			return true

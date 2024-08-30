@@ -1,4 +1,4 @@
-package netflow
+package netstat
 
 import (
 	"fmt"
@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/walcher-mm/go-netflow/internal/utils"
 )
 
 const (
@@ -129,7 +131,7 @@ func removeEmpty(array []string) []string {
 
 type filterFunc func()
 
-func netstat(t string) ([]*ConnectionItem, error) {
+func Netstat(t string) ([]*ConnectionItem, error) {
 	var (
 		conns []*ConnectionItem
 	)
@@ -171,7 +173,7 @@ func getConnectionItem(line string) *ConnectionItem {
 
 	// connection info
 	stateNum, _ := strconv.ParseInt(source[3], 16, 32)
-	state := states[int(stateNum)]
+	state := utils.TCP_STATE[int(stateNum)]
 
 	// parse tx, rx queue size
 	tcpQueue := strings.Split(source[4], ":")
@@ -192,7 +194,7 @@ func getConnectionItem(line string) *ConnectionItem {
 	}
 
 	// get user name by uid
-	uname := getUserByUID(source[7])
+	uname := utils.GetUserByUID(source[7])
 
 	// socket inode
 	inode := source[9]
@@ -221,24 +223,24 @@ func getConnectionItem(line string) *ConnectionItem {
 
 // Tcp func Get a slice of Process type with TCP data
 func Tcp() []*ConnectionItem {
-	data, _ := netstat("tcp")
+	data, _ := Netstat("tcp")
 	return data
 }
 
 // Udp func Get a slice of Process type with UDP data
 func Udp() []*ConnectionItem {
-	data, _ := netstat("udp")
+	data, _ := Netstat("udp")
 	return data
 }
 
 // Tcp6 func Get a slice of Process type with TCP6 data
 func Tcp6() []*ConnectionItem {
-	data, _ := netstat("tcp6")
+	data, _ := Netstat("tcp6")
 	return data
 }
 
 // Udp6 func Get a slice of Process type with UDP6 data
 func Udp6() []*ConnectionItem {
-	data, _ := netstat("udp6")
+	data, _ := Netstat("udp6")
 	return data
 }

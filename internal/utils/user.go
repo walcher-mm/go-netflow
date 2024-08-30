@@ -1,4 +1,4 @@
-package netflow
+package utils
 
 import (
 	"bufio"
@@ -41,6 +41,6 @@ func loadSystemUsersInfo() {
 	}
 }
 
-func getUserByUID(uid string) string {
+func GetUserByUID(uid string) string {
 	return systemUsers[uid]
 }
