@@ -14,7 +14,6 @@ import (
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
 	"github.com/google/gopacket/pcapgo"
-	"github.com/shirou/gopsutil/process"
 
 	// "github.com/shirou/gopsutil/process"
 	"github.com/walcher-mm/go-netflow/pkg/cgroup"
@@ -286,22 +285,15 @@ func (nf *Netflow) GetProcessesByName(name string) ([]*netproc.Process, error) {
 
 	var res []*netproc.Process
 
-	procs, err := process.Processes()
-	if err != nil {
-		return nil, err
-	}
+	procs := nf.processHash.GetRefreshProc(2)
 
 	for _, proc := range procs {
-		pname, err := proc.Name()
-		if err != nil {
-			continue
-		}
-
+		pname := proc.Name
 		if strings.Contains(pname, name) {
-			pidStr := fmt.Sprintf("%d", proc.Pid)
-			res = append(res, nf.processHash.Get(pidStr))
+			res = append(res, nf.processHash.Get(proc.Pid))
 		}
 	}
+
 	return res, nil
 }
 

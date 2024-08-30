@@ -41,6 +41,14 @@ func (p *Process) getLastTrafficEntry() *trafficEntry {
 	return p.Ring[len(p.Ring)-1]
 }
 
+// func (p *Process) Count() {
+// 	stats := new(trafficStatsEntry)
+// 	for _, item := range p.Ring {
+// 		stats.In += item.In
+// 		stats.Out += item.Out
+// 	}
+// }
+
 func (p *Process) analyseStats(sec int) {
 	var (
 		stats = new(trafficStatsEntry)
@@ -253,7 +261,19 @@ func (pm *ProcessController) GetRank(limit int) []*Process {
 	for _, item := range src {
 		res = append(res, item.copy())
 	}
-	return src
+	pm.sortedProcesses = res
+	return res
+}
+
+func (pm *ProcessController) GetRefreshProc(sec int) []*Process {
+	pm.RLock()
+	defer pm.RUnlock()
+	res := []*Process{}
+	for _, po := range pm.dict {
+		po.analyseStats(sec)
+		res = append(res, po)
+	}
+	return res
 }
 
 func (pm *ProcessController) Sort(sec int) []*Process {

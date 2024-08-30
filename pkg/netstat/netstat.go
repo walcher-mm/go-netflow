@@ -2,7 +2,6 @@ package netstat
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
@@ -62,7 +61,7 @@ func parseNetworkLines(tp string) ([]string, error) {
 		pf = procTCPFile
 	}
 
-	data, err := ioutil.ReadFile(pf)
+	data, err := os.ReadFile(pf)
 	if err != nil {
 		return nil, err
 	}
@@ -221,26 +220,26 @@ func getConnectionItem(line string) *ConnectionItem {
 	return cc
 }
 
-// Tcp func Get a slice of Process type with TCP data
-func Tcp() []*ConnectionItem {
-	data, _ := Netstat("tcp")
-	return data
-}
+// // Tcp func Get a slice of Process type with TCP data
+// func Tcp() []*ConnectionItem {
+// 	data, _ := Netstat("tcp")
+// 	return data
+// }
 
-// Udp func Get a slice of Process type with UDP data
-func Udp() []*ConnectionItem {
-	data, _ := Netstat("udp")
-	return data
-}
+// // Udp func Get a slice of Process type with UDP data
+// func Udp() []*ConnectionItem {
+// 	data, _ := Netstat("udp")
+// 	return data
+// }
 
-// Tcp6 func Get a slice of Process type with TCP6 data
-func Tcp6() []*ConnectionItem {
-	data, _ := Netstat("tcp6")
-	return data
-}
+// // Tcp6 func Get a slice of Process type with TCP6 data
+// func Tcp6() []*ConnectionItem {
+// 	data, _ := Netstat("tcp6")
+// 	return data
+// }
 
-// Udp6 func Get a slice of Process type with UDP6 data
-func Udp6() []*ConnectionItem {
-	data, _ := Netstat("udp6")
-	return data
-}
+// // Udp6 func Get a slice of Process type with UDP6 data
+// func Udp6() []*ConnectionItem {
+// 	data, _ := Netstat("udp6")
+// 	return data
+// }
