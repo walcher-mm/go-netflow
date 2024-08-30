@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/walcher-mm/go-netflow/internal/utils"
+	"github.com/walcher-mm/go-netflow/pkg/utils"
 )
 
 const (

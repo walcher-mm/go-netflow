@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/walcher-mm/go-netflow/internal/utils"
+	"github.com/walcher-mm/go-netflow/pkg/utils"
 )
 
 func TestStringSuffix(t *testing.T) {
