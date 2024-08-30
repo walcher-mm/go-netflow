@@ -1,4 +1,4 @@
-package netflow
+package process
 
 import (
 	"context"
@@ -9,19 +9,20 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/walcher-mm/go-netflow/internal/utils"
 )
 
 func TestStringSuffix(t *testing.T) {
 	cur := "/proc/123123/fd/3"
-	b := matchStringSuffix(cur, []string{"fd/0", "fd/1", "fd2"})
+	b := utils.MatchStringSuffix(cur, []string{"fd/0", "fd/1", "fd2"})
 	assert.Equal(t, false, b)
 
 	cur = "/proc/123123/fd/2"
-	b = matchStringSuffix(cur, []string{"fd/0", "fd/1", "fd/2"})
+	b = utils.MatchStringSuffix(cur, []string{"fd/0", "fd/1", "fd/2"})
 	assert.Equal(t, true, b)
 
 	cur = "/proc/123123/fd/11"
-	b = matchStringSuffix(cur, []string{"fd/0", "fd/1", "fd2"})
+	b = utils.MatchStringSuffix(cur, []string{"fd/0", "fd/1", "fd2"})
 	assert.Equal(t, false, b)
 }
 
@@ -41,8 +42,8 @@ func TestProcessHash(t *testing.T) {
 
 	time.Sleep(3 * time.Second)
 
-	t.Log(MarshalIndent(pm.dict))
-	t.Log(MarshalIndent(pm.inodePidMap))
+	t.Log(utils.MarshalIndent(pm.dict))
+	t.Log(utils.MarshalIndent(pm.inodePidMap))
 	pm.Stop()
 }
 
@@ -78,10 +79,10 @@ func TestProcessAnalyse(t *testing.T) {
 	assert.EqualValues(t, 150, po.getLastTrafficEntry().In)
 	assert.EqualValues(t, 100, po.getLastTrafficEntry().Out)
 
-	t.Log(MarshalIndent(po))
+	t.Log(utils.MarshalIndent(po))
 
 	po.analyseStats(2)
-	t.Log(MarshalIndent(po))
+	t.Log(utils.MarshalIndent(po))
 }
 
 func TestProcessAnalyse2(t *testing.T) {
@@ -147,7 +148,7 @@ func TestSortedProcesses(t *testing.T) {
 
 	sort.Sort(sortedProcesses(pps))
 
-	t.Log(MarshalIndent(pps))
+	t.Log(utils.MarshalIndent(pps))
 
 	link := []*Process{p4, p3, p2, p1} // desc sort
 	for idx := range link {

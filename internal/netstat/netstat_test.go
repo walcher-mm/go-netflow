@@ -1,4 +1,4 @@
-package netflow
+package netstat
 
 import (
 	"encoding/json"

@@ -1,20 +1,22 @@
+//go:build linux
 // +build linux
 
-package netflow
+package cgroup
 
 import (
 	"fmt"
+
 	"github.com/containerd/cgroups"
 	specs "github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/spf13/cast"
 )
 
-type cgroupsLimiter struct {
+type CgroupsLimiter struct {
 	controls []cgroups.Cgroup
 }
 
 // configure
-func (r *cgroupsLimiter) configure(pid int, core float64, mbn int) error {
+func (r *CgroupsLimiter) Configure(pid int, core float64, mbn int) error {
 	const (
 		cpuUnit = 10000
 		memUnit = 1024 * 1024
@@ -56,7 +58,7 @@ func (r *cgroupsLimiter) configure(pid int, core float64, mbn int) error {
 }
 
 // free
-func (r *cgroupsLimiter) free() error {
+func (r *CgroupsLimiter) Free() error {
 	for _, ctrl := range r.controls {
 		ctrl.Delete()
 	}

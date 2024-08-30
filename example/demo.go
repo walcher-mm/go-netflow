@@ -3,12 +3,16 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"time"
 
-	"github.com/rfyiamcool/go-netflow"
+	"github.com/walcher-mm/go-netflow"
 )
 
 func main() {
+
+	targetName := os.Args[1]
+
 	nf, err := netflow.New(
 		netflow.WithCaptureTimeout(5 * time.Second),
 	)
@@ -33,6 +37,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	res, err := nf.GetProcessesByName(targetName)
 
 	bs, err := json.MarshalIndent(rank, "", "    ")
 	if err != nil {

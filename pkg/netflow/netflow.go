@@ -15,6 +15,12 @@ import (
 	"github.com/google/gopacket/pcap"
 	"github.com/google/gopacket/pcapgo"
 	"github.com/shirou/gopsutil/process"
+
+	// "github.com/shirou/gopsutil/process"
+	"github.com/walcher-mm/go-netflow/internal/cgroup"
+	"github.com/walcher-mm/go-netflow/internal/netstat"
+	netproc "github.com/walcher-mm/go-netflow/internal/process"
+	"github.com/walcher-mm/go-netflow/internal/utils"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -33,8 +39,8 @@ type Netflow struct {
 	ctx    context.Context
 	cancel context.CancelFunc
 
-	connInodeHash *Mapping
-	processHash   *processController
+	connInodeHash *utils.Mapping
+	processHash   *netproc.ProcessController
 	workerNum     int
 	qsize         int
 
@@ -55,7 +61,7 @@ type Netflow struct {
 
 	// for debug
 	debugMode bool
-	logger    LoggerInterface
+	logger    utils.LoggerInterface
 
 	// for cgroup
 	cpuCore float64
@@ -101,7 +107,7 @@ func WithLimitCgroup(cpu float64, mem int) optionFunc {
 	}
 }
 
-func WithLogger(logger LoggerInterface) optionFunc {
+func WithLogger(logger utils.LoggerInterface) optionFunc {
 	return func(o *Netflow) error {
 		o.logger = logger
 		return nil
@@ -208,7 +214,7 @@ const (
 	defaultCaptureTimeout = time.Duration(300 * time.Second)
 )
 
-type Interface interface {
+type NetFLowInterface interface {
 	// start netflow
 	Start() error
 
@@ -224,10 +230,10 @@ type Interface interface {
 	// GetProcessRank
 	// param limit, size of data returned.
 	// param recentSeconds, the average of the last few seconds' value.
-	GetProcessRank(limit int, recentSeconds int) ([]*Process, error)
+	GetProcessRank(limit int, recentSeconds int) ([]*netproc.Process, error)
 }
 
-func New(opts ...optionFunc) (Interface, error) {
+func New(opts ...optionFunc) (NetFLowInterface, error) {
 	var (
 		ctx, cancel = context.WithCancel(context.Background())
 	)
@@ -243,7 +249,7 @@ func New(opts ...optionFunc) (Interface, error) {
 		captureTimeout: defaultCaptureTimeout,
 		syncInterval:   defaultSyncInterval,
 		debugMode:      false,
-		logger:         &logger{},
+		logger:         &utils.Logger{},
 	}
 
 	for _, opt := range opts {
@@ -255,8 +261,8 @@ func New(opts ...optionFunc) (Interface, error) {
 
 	nf.packetQueue = make(chan gopacket.Packet, nf.qsize)
 	nf.delayQueue = make(chan *delayEntry, nf.qsize)
-	nf.connInodeHash = NewMapping()
-	nf.processHash = NewProcessController(nf.ctx)
+	nf.connInodeHash = utils.NewMapping()
+	nf.processHash = netproc.NewProcessController(nf.ctx)
 
 	return nf, nil
 }
@@ -265,8 +271,8 @@ func (nf *Netflow) Done() <-chan struct{} {
 	return nf.ctx.Done()
 }
 
-func (nf *Netflow) GetProcessRank(limit int, recentSeconds int) ([]*Process, error) {
-	if recentSeconds > maxRingSize {
+func (nf *Netflow) GetProcessRank(limit int, recentSeconds int) ([]*netproc.Process, error) {
+	if recentSeconds > netproc.MaxRingSize {
 		return nil, errors.New("windows interval must <= 15")
 	}
 
@@ -275,9 +281,9 @@ func (nf *Netflow) GetProcessRank(limit int, recentSeconds int) ([]*Process, err
 	return prank, nil
 }
 
-func (nf *Netflow) GetProcessesByName(name string) ([]*Process, error) {
+func (nf *Netflow) GetProcessesByName(name string) ([]*netproc.Process, error) {
 
-	var res []*Process
+	var res []*netproc.Process
 
 	procs, err := process.Processes()
 	if err != nil {
@@ -310,12 +316,12 @@ func (nf *Netflow) configureCgroups() error {
 		return nil
 	}
 
-	cg := cgroupsLimiter{}
+	cg := cgroup.CgroupsLimiter{}
 	pid := os.Getpid()
 
-	err := cg.configure(pid, nf.cpuCore, nf.memMB)
+	err := cg.Configure(pid, nf.cpuCore, nf.memMB)
 	nf.exitFunc = append(nf.exitFunc, func() {
-		cg.free()
+		cg.Free()
 	})
 
 	return err
@@ -434,7 +440,7 @@ func (nf *Netflow) rescanProcessInodes() error {
 }
 
 func (nf *Netflow) rescanConns() error {
-	conns, err := netstat("tcp")
+	conns, err := netstat.Netstat("tcp")
 	if err != nil {
 		return err
 	}
@@ -646,7 +652,7 @@ func (nf *Netflow) handleDelayEntry(entry *delayEntry) error {
 	return nil
 }
 
-func (nf *Netflow) getProcessByAddr(addr string) (*Process, error) {
+func (nf *Netflow) getProcessByAddr(addr string) (*netproc.Process, error) {
 	inode := nf.connInodeHash.Get(addr)
 	if len(inode) == 0 {
 		// not found, to rescan
@@ -664,7 +670,7 @@ func (nf *Netflow) getProcessByAddr(addr string) (*Process, error) {
 	return proc, nil
 }
 
-func (nf *Netflow) increaseProcessTraffic(proc *Process, length int64, side sideOption) error {
+func (nf *Netflow) increaseProcessTraffic(proc *netproc.Process, length int64, side sideOption) error {
 	switch side {
 	case inputSide:
 		proc.IncreaseInput(length)

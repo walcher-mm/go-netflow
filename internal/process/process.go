@@ -1,4 +1,4 @@
-package netflow
+package process
 
 import (
 	"context"
@@ -11,10 +11,12 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/walcher-mm/go-netflow/internal/utils"
 )
 
 var (
-	maxRingSize = 15
+	MaxRingSize = 15
 )
 
 type Process struct {
@@ -64,7 +66,7 @@ func (p *Process) analyseStats(sec int) {
 }
 
 func (po *Process) shrink() {
-	if len(po.Ring) >= maxRingSize {
+	if len(po.Ring) >= MaxRingSize {
 		po.Ring = po.Ring[1:] // reduce size
 	}
 }
@@ -169,7 +171,7 @@ func GetProcesses() (map[string]*Process, error) {
 
 	for _, fpath := range files {
 		rules := []string{"fd/0", "fd/1", "fd/2"}
-		if matchStringSuffix(fpath, rules) {
+		if utils.MatchStringSuffix(fpath, rules) {
 			continue
 		}
 
@@ -206,7 +208,7 @@ func GetProcesses() (map[string]*Process, error) {
 	return ppm, nil
 }
 
-type processController struct {
+type ProcessController struct {
 	sync.RWMutex
 
 	ctx    context.Context
@@ -223,13 +225,13 @@ type processController struct {
 	sortedProcesses sortedProcesses
 }
 
-func NewProcessController(ctx context.Context) *processController {
+func NewProcessController(ctx context.Context) *ProcessController {
 	var (
 		size = 1000
 	)
 
 	cctx, cancel := context.WithCancel(ctx)
-	return &processController{
+	return &ProcessController{
 		ctx:         cctx,
 		cancel:      cancel,
 		dict:        make(map[string]*Process, size),
@@ -237,7 +239,7 @@ func NewProcessController(ctx context.Context) *processController {
 	}
 }
 
-func (pm *processController) GetRank(limit int) []*Process {
+func (pm *ProcessController) GetRank(limit int) []*Process {
 	pm.RLock()
 	defer pm.RUnlock()
 
@@ -254,7 +256,7 @@ func (pm *processController) GetRank(limit int) []*Process {
 	return src
 }
 
-func (pm *processController) Sort(sec int) []*Process {
+func (pm *ProcessController) Sort(sec int) []*Process {
 	pm.RLock()
 	defer pm.RUnlock()
 
@@ -270,21 +272,21 @@ func (pm *processController) Sort(sec int) []*Process {
 	return pos
 }
 
-func (pm *processController) Add(pid string, p *Process) {
+func (pm *ProcessController) Add(pid string, p *Process) {
 	pm.Lock()
 	defer pm.Unlock()
 
 	pm.dict[pid] = p
 }
 
-func (pm *processController) Get(pid string) *Process {
+func (pm *ProcessController) Get(pid string) *Process {
 	pm.RLock()
 	defer pm.RUnlock()
 
 	return pm.dict[pid]
 }
 
-func (pm *processController) GetProcessByInode(inode string) *Process {
+func (pm *ProcessController) GetProcessByInode(inode string) *Process {
 	pm.RLock()
 	defer pm.RUnlock()
 
@@ -296,14 +298,14 @@ func (pm *processController) GetProcessByInode(inode string) *Process {
 	return pm.dict[pid]
 }
 
-func (pm *processController) delete(pid string) {
+func (pm *ProcessController) delete(pid string) {
 	pm.Lock()
 	defer pm.Unlock()
 
 	delete(pm.dict, pid)
 }
 
-func (pm *processController) readIterator(fn func(*Process)) {
+func (pm *ProcessController) readIterator(fn func(*Process)) {
 	pm.RLock()
 	defer pm.RUnlock()
 
@@ -312,7 +314,7 @@ func (pm *processController) readIterator(fn func(*Process)) {
 	}
 }
 
-func (pm *processController) anyIterator(fn func(*Process)) {
+func (pm *ProcessController) anyIterator(fn func(*Process)) {
 	pm.Lock()
 	defer pm.Unlock()
 
@@ -321,7 +323,7 @@ func (pm *processController) anyIterator(fn func(*Process)) {
 	}
 }
 
-func (pm *processController) copy() map[string]*Process {
+func (pm *ProcessController) copy() map[string]*Process {
 	ndict := make(map[string]*Process, len(pm.dict))
 
 	pm.RLock()
@@ -333,11 +335,11 @@ func (pm *processController) copy() map[string]*Process {
 	return ndict
 }
 
-func (pm *processController) AsyncRun() {
+func (pm *ProcessController) AsyncRun() {
 	go pm.Run()
 }
 
-func (pm *processController) Run() {
+func (pm *ProcessController) Run() {
 	var (
 		interval = 5 * time.Second
 		ticker   = time.NewTicker(interval)
@@ -356,16 +358,16 @@ func (pm *processController) Run() {
 	}
 }
 
-func (pm *processController) Stop() {
+func (pm *ProcessController) Stop() {
 	pm.cancel()
 }
 
-func (pm *processController) sortNetflow() string {
+func (pm *ProcessController) sortNetflow() string {
 	bs, _ := json.MarshalIndent(pm.dict, "", "    ")
 	return string(bs)
 }
 
-func (pm *processController) analyse() error {
+func (pm *ProcessController) analyse() error {
 	pm.RLock()
 	defer pm.RUnlock()
 
@@ -376,7 +378,7 @@ func (pm *processController) analyse() error {
 	return nil
 }
 
-func (pm *processController) Rescan() error {
+func (pm *ProcessController) Rescan() error {
 	ps, err := GetProcesses()
 	if err != nil {
 		return err
@@ -420,7 +422,7 @@ func (pm *processController) Rescan() error {
 	return nil
 }
 
-func (pm *processController) Reset() {
+func (pm *ProcessController) Reset() {
 	pm.dict = make(map[string]*Process, 1000)
 	pm.inodePidMap = make(map[string]string, 1000)
 }
